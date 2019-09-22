@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+<style type="text/css">
+html, body {
+	margin: 0px;
+	padding: 0px;
+	user-select: none;
+}
+table {
+	position: absolute;
+}
+td {
+	padding: 16px;
+}
+#cross {
+	border-left: 0px;
+	border-top: 0px;
+	border-right: 1px;
+	border-bottom: 1px;
+	border-color: black;
+	border-style: solid;
+	display: inline-block;
+	position: absolute;
+}
+#border {
+	width: 32px;
+	height: 32px;
+	border: 1px solid black;
+	display: inline-block;
+	position: absolute;
+}
+</style>
+</head>
+<body>
+
+<div id="cross"></div>
+
+<table cellpadding="0" cellspacing="0">
+	<tr>
+		<td style="cursor: default;">default</td>
+		<td style="cursor: none;">none</td>
+		<td style="cursor: context-menu;">context-menu</td>
+		<td style="cursor: help;">help</td>
+		<td style="cursor: pointer;">pointer</td>
+		<td style="cursor: progress;">progress</td>
+		<td style="cursor: wait;">wait</td>
+	</tr>
+	<tr>
+		<td style="cursor: cell;">cell</td>
+		<td style="cursor: crosshair;">crosshair</td>
+		<td style="cursor: text;">text</td>
+		<td style="cursor: vertical-text;">vertical-text</td>
+		<td style="cursor: alias;">alias</td>
+		<td style="cursor: copy;">copy</td>
+		<td style="cursor: move;">move</td>
+	</tr>
+	<tr>
+		<td style="cursor: no-drop;">no-drop</td>
+		<td style="cursor: not-allowed;">not-allowed</td>
+		<td style="cursor: e-resize;">e-resize</td>
+		<td style="cursor: n-resize;">n-resize</td>
+		<td style="cursor: ne-resize;">ne-resize</td>
+		<td style="cursor: nw-resize;">nw-resize</td>
+		<td style="cursor: s-resize;">s-resize</td>
+	</tr>
+	<tr>
+		<td style="cursor: se-resize;">se-resize</td>
+		<td style="cursor: sw-resize;">sw-resize</td>
+		<td style="cursor: w-resize;">w-resize</td>
+		<td style="cursor: ew-resize;">ew-resize</td>
+		<td style="cursor: ns-resize;">ns-resize</td>
+		<td style="cursor: nesw-resize;">nesw-resize</td>
+		<td style="cursor: nwse-resize;">nwse-resize</td>
+	</tr>
+	<tr>
+		<td style="cursor: col-resize;">col-resize</td>
+		<td style="cursor: row-resize;">row-resize</td>
+		<td style="cursor: all-scroll;">all-scroll</td>
+		<td style="cursor: zoom-in;">zoom-in</td>
+		<td style="cursor: zoom-out;">zoom-out</td>
+		<td style="cursor: grab;">grab</td>
+		<td style="cursor: grabbing;">grabbing</td>
+	</tr>
+</table>
+
+<script type="text/javascript">
+var cross = document.getElementById("cross")
+
+function drawCross(event) {
+	cross.style.width = event.pageX + "px"
+	cross.style.height = event.pageY + "px"
+}
+
+function setCursor(event) {
+	document.body.style.cursor = event.target.innerHTML
+}
+
+let tds = document.getElementsByTagName("td")
+for (let i in tds) {
+	tds[i].onmousemove = drawCross
+}
+</script>
+</body>
+</html>

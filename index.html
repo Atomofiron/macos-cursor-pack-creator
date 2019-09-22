@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>MacOS Cursor Pack Creator</title>
+<style type="text/css">
+html, body {
+	margin: 0px;
+	font-family: arial;
+	user-select: none;
+}
+input[type="text"] {
+	width: 512px;
+}
+input[type="number"] {
+	width: 64px;
+}
+label {
+	display: inline-block;
+}
+svg {
+	width: 64px;
+	height: 64px;
+}
+#interface {
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	top: 0px;
+	padding-left: 100px; /* 92 + 8 */
+	padding-right: 8px;
+	z-index: 1;
+}
+#header {
+	width: 100%;
+	height: 92px; /* 92 = 20 + 3 + 1 + 64 + 1 + 3 */
+}
+.header_area {
+	width: 50%;
+	padding-left: 8px;
+	padding-right: 8px;
+}
+.area {
+	/* used in js */
+}
+#trash_area {
+	width: 100%;
+	height: 92px; /* 92 = 20 + 3 + 1 + 64 + 1 + 3 */
+	display: inline-block;
+	background-image: url("./delete-circle.svg");
+	background-repeat: no-repeat;
+	background-position: center;
+	box-shadow: 0px 1px 6px 0px red;
+	border-bottom-left-radius: 6px;
+	border-bottom-right-radius: 6px;
+	transition: all 0.1s ease-in;
+	background-color: #ffffff;
+	border: 4px dashed #ffdddd;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+#trash_area.mouseover {
+	background-color: #ffdddd;
+	box-shadow: 0px 1px 10px -2px red;
+}
+#trash_area.dragover {
+	background-color: #ffcccc;
+	border: 4px dashed #ffbbbb;
+}
+#file_area {
+	width: 100%;
+	height: 92px; /* 92 = 20 + 3 + 1 + 64 + 1 + 3 */
+	display: inline-block;
+	background-image: url("./plus-circle.svg");
+	background-repeat: no-repeat;
+	background-position: center;
+	box-shadow: 0px 1px 6px 0px green;
+	border-bottom-left-radius: 6px;
+	border-bottom-right-radius: 6px;
+	transition: all 0.1s ease-in;
+	background-color: #ffffff;
+	border: 4px dashed #ccffcc;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+#file_area.dragover {
+	background-color: #ccffcc;
+	border: 4px dashed #aaffaa;
+}
+#file_area:hover {
+	background-color: #ccffcc;
+	box-shadow: 0px 1px 10px -2px green;
+	cursor: pointer;
+}
+#recruit_area {
+	width: 89px; /* 92 - 3 */
+	height: 100%;
+	padding-right: 3px;
+	position: fixed;
+	margin-top: -108px;
+	overflow-x: hidden;
+	overflow-y: visible;
+	direction: rtl; /* -webkit-scrollbar слева */
+	z-index: 1;
+	box-shadow: 0px 1px 6px 0px grey;
+}
+#constructor {
+	margin-left: 108px; /* 92 + 16 */
+	margin-top: 108px;
+	margin-right: 16px;
+	margin-bottom: 16px;
+	padding: 16px;
+	background-color: #ffffff;
+	border-radius: 6px;
+	box-shadow: 0px 1px 6px 0px grey;
+	visibility: hidden;
+}
+#introduction {
+	height: 100%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	border: 4px dashed lightgrey;
+	border-radius: 6px;
+	color: lightgrey;
+	text-align: center;
+	vertical-align: middle;
+	font-size: 32px;
+	font-weight: bold;
+	padding-top: 20%;
+}
+#introduction.dragover {
+	border-color: grey;
+	color: grey;
+}
+#introduction:hover {
+	cursor: pointer;
+}
+#loading {
+	width: 32px;
+	height: 32px;
+	animation: loading .5s infinite linear;
+	display: none;
+}
+#download {
+	width: 24px;
+	height: 24px;
+	position: fixed;
+	right: 32px;
+	bottom: 32px;
+	border-radius: 999px;
+	background-color: white;
+	padding: 16px;
+	cursor: pointer;
+	box-shadow: 0px 2px 6px 0px grey;
+	transition: all 0.2s ease-in;
+	display: none;
+}
+#download:hover {
+	box-shadow: 0px 4px 10px -2px grey;
+}
+.cursors_area {
+	width: 66px;
+	padding-top: 37px;
+	padding-bottom: 37px;
+	padding-left: 4px;
+	padding-right: 4px;
+	display: inline-block;
+	vertical-align: top;
+	border-radius: 6px;
+	box-shadow: inset 0px 1px 8px 0px blue;
+	margin-left: 8px;
+	margin-right: 8px;
+}
+.drag_target:hover {
+	cursor: grab;
+}
+.cursor_hot_spot {
+	border-left: 0px;
+	border-top: 0px;
+	border-right: .5px;
+	border-bottom: .5px;
+	border-style: solid;
+	border-color: red;
+	position: absolute;
+	animation: hotSpotBlink 1s 0s;
+	animation-iteration-count: infinite;
+}
+.cursors_area img, .cursor_preview {
+	vertical-align: top;
+}
+.cursor_preview {
+	display: inline-block;
+	overflow: hidden;
+	border: 1px solid black;
+	box-sizing: unset !important;
+	-moz-box-sizing: unset !important;
+	-webkit-box-sizing: unset !important;
+}
+/*
+recruit area: scroll bar 20 + space 3 + cursor border 1 + cursor 64 + cursor border 1 + right padding 3 = 92
+*/
+
+@keyframes loading {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes hotSpotBlink {
+	from {
+		border-color: red;
+	}
+	50% {
+		border-color: blue;
+	}
+	to {
+		border-color: red;
+	}
+}
+
+@keyframes highlight {
+	from {
+		background: rgba(0, 0, 255, .2);
+	}
+	50% {
+		background: rgba(0, 0, 255, .2);
+	}
+	to {
+		background: rgba(0, 0, 255, 0);
+	}
+}
+@keyframes highlight2 {
+	from {
+		background: rgba(0, 0, 255, .2);
+	}
+	50% {
+		background: rgba(0, 0, 255, .2);
+	}
+	to {
+		background: rgba(0, 0, 255, 0);
+	}
+}
+</style>
+</head>
+<body>
+
+<table id="interface" width="100%" cellspacing="0" cellpadding="0">
+	<tr id="header">
+		<td class="header_area" valign="top">
+			<div id="trash_area" class="area"></div>
+		</td>
+		<td class="header_area" valign="top">
+			<input id="image_input" type="file" accept=".png,.svg" multiple="true" hidden="true" />
+			<div id="file_area" class="area"></div>
+		</td>
+	</tr>
+	<tr id="introduction_tr">
+		<td colspan="2" style="padding: 8px;">
+			<input id="cape_input" type="file" accept=".cape" multiple="false" hidden="true" />
+			<div id="introduction">
+				Drop the .cape file here<br>
+				or&hellip; <button id="load_default" onclick="loadDefaultCape()">Open default</button><img id="loading" src="./favicons/favicon64.png" />
+			</div>
+		</td>
+	</tr>
+</table>
+
+<div id="recruit_area" class="area recruit_area"></div>
+
+<img id="download" src="./content-save.svg" onclick="exportCape()">
+
+<div id="constructor">
+	<div id="test_area" class="area cursors_area" style="float: unset; display: none;"></div>
+
+	<label>Author: <input id="Author" type="text"/></label><br>
+	<label>CapeName: <input id="CapeName" type="text"/></label><br>
+	<label>Identifier: <input id="Identifier" type="text"/></label><br>
+	<label>CapeVersion: <input id="CapeVersion" type="number"/></label>
+	<label>MinimumVersion: <input id="MinimumVersion" type="number"/></label>
+	<label>Version: <input id="Version" type="number"/></label><br>
+	<label>Cloud: <input id="Cloud" type="checkbox"/></label>
+	<label>HiDPI: <input id="HiDPI" type="checkbox"/></label><br>
+	<label>Result size <input id="result_size" type="number" value="32" min="0" oninput="setResultSize(parseInt(this.value))" /> points (not pixels).  Device pixel ratio = </label><br>
+	Quality (Arrow):
+	<label><input id="arrow_quality_1" type="checkbox" oninput="checkQualityCheckboxes(this, arrowQuality)"/>1x</label>
+	<label><input id="arrow_quality_2" type="checkbox" oninput="checkQualityCheckboxes(this, arrowQuality)"/>2x</label>
+	<label><input id="arrow_quality_5" type="checkbox" oninput="checkQualityCheckboxes(this, arrowQuality)"/>5x</label>
+	<label><input id="arrow_quality_10" type="checkbox" oninput="checkQualityCheckboxes(this, arrowQuality)"/>10x</label>
+	<br>
+	Quality (others): 
+	<label><input id="quality_1" type="checkbox" oninput="checkQualityCheckboxes(this, othersQuality)"/>1x</label>
+	<label><input id="quality_2" type="checkbox" oninput="checkQualityCheckboxes(this, othersQuality)"/>2x</label>
+	<label><input id="quality_5" type="checkbox" oninput="checkQualityCheckboxes(this, othersQuality)"/>5x</label>
+	<label><input id="quality_10" type="checkbox" oninput="checkQualityCheckboxes(this, othersQuality)"/>10x</label>
+
+	<br><br>
+
+	<div id="cursors"></div>
+</div>
+
+
+
+
+<script type="text/javascript">
+var clog = console.log
+
+function unloadingLocker(event) {
+	var confirmationMessage = "\o/";
+
+	//Gecko + IE, Webkit, Safari, Chrome
+	(event || window.event).returnValue = confirmationMessage;
+	return confirmationMessage;
+}
+
+function lockUnload(lock = true) {
+	if (lock)
+		window.addEventListener("beforeunload", unloadingLocker)
+	else
+		window.removeEventListener("beforeunload", unloadingLocker)
+}
+
+function get(id) {
+	return document.getElementById(id)
+}
+
+function create(tag) {
+	return document.createElement(tag)
+}
+
+function newLine() {
+	return document.createElement("br")
+}
+
+function input(type) {
+	let o = document.createElement("input")
+	o.type = type
+	return o
+}
+
+function label(text) {
+	let o = document.createElement("label")
+	o.innerHTML = text
+	return o
+}
+
+function field(type, text) {
+	let i = input(type)
+	let l = label(text)
+	l.appendChild(i)
+	let o = {}
+	l.input = i
+	return l
+}
+
+function cursorArea() {
+	let o = document.createElement("div")
+	o.classList.toggle(CLASS_AREA, true)
+	o.classList.toggle(CLASS_AREA_CURSORS, true)
+	o.ondrop = onDropTo
+	o.ondragover = onDragOverTo
+	o.onafterdrop = updateCursorPreview
+	return o
+}
+
+function createHotSpot() {
+	let o = document.createElement("div")
+	o.classList.toggle(CLASS_HOT_SPOT, true)
+	return o
+}
+
+Element.prototype.toggle = function (clazz, enable) {
+	this.classList.toggle(clazz, enable)
+}
+
+function getPx(value) {
+	if (value == "") return 0
+	return parseInt(value.replace(px, ""))
+}
+
+const PREVIEW_SIZE = 64
+const px = "px"
+const ID = "ID"
+const CLASS_PARAMS = "params"
+const CLASS_MOUSE_OVER = "mouseover"
+const CLASS_DRAG_OVER = "dragover"
+const CLASS_GRABBING = "grabbing"
+const CLASS_AREA = "area"
+const CLASS_HOT_SPOT = "cursor_hot_spot"
+const CLASS_DRAG_TARGET = "drag_target"
+const CLASS_AREA_RECRUIT = "recruit_area"
+const CLASS_AREA_CURSORS = "cursors_area"
+const CLASS_PREVIEW_CURSOR = "cursor_preview"
+
+const KIND_STRING = "string"
+const KIND_FILE = "file"
+const CAPE = ".cape"
+const PNG = ".png"
+const SVG = ".svg"
+const URI_TYPE = "text/uri-list"
+const PLAIN_TYPE = "text/plain"
+const SVG_TYPE = "image/svg+xml"
+const PNG_TYPE = "image/png"
+const DATA_PNG_BASE64 = "data:" + PNG_TYPE + ";base64,"
+const DATA_TXT = "data:application/txt,"
+const DATA_TXT_BASE64 = "data:application/xml;base64,"
+const DISABLED = "disabled"
+const VISIBLE = "visible"
+const HIDDEN = "hidden"
+
+let counter = 0
+function count() {
+	return counter++
+}
+
+var cursorsJson = null
+
+const recruit_area = get("recruit_area")
+const image_input = get("image_input")
+const file_area = get("file_area")
+const trash_area = get("trash_area")
+const cursors = get("cursors")
+const introduction = get("introduction")
+const introductionContainer = get("introduction").parentNode.parentNode
+const cape_input = get("cape_input")
+
+const arrowQuality = [
+	{
+		"multiplier" : 1,
+		"input" : get("arrow_quality_1")
+	},
+	{
+		"multiplier" : 2,
+		"input" : get("arrow_quality_2")
+	},
+	{
+		"multiplier" : 5,
+		"input" : get("arrow_quality_5")
+	},
+	{
+		"multiplier" : 10,
+		"input" : get("arrow_quality_10")
+	}
+]
+const othersQuality = [
+	{
+		"multiplier" : 1,
+		"input" : get("quality_1")
+	},
+	{
+		"multiplier" : 2,
+		"input" : get("quality_2")
+	},
+	{
+		"multiplier" : 5,
+		"input" : get("quality_5")
+	},
+	{
+		"multiplier" : 10,
+		"input" : get("quality_10")
+	}
+]
+let index = (devicePixelRatio > 1) ? 1 : 0
+arrowQuality[2].input.checked = true
+arrowQuality[index].input.checked = true
+othersQuality[index].input.checked = true
+
+var systemd = null
+{
+	let password = Math.ceil(Math.random() * Number.MAX_SAFE_INTEGER)
+	let demons = []
+	let worker = function (start = 0) {
+		var i = start
+		try { // for внутри try наверно лучше, чем try внутри for
+			for (i; i < demons.length; i++) {
+				demons[i]()
+			}
+		} catch (e) {
+			console.log("systemd: " + e)
+			worker(++i)
+		}
+	}
+	systemd = function (demon) {
+		if (demon !== undefined && demon != null && demon != password) {
+			if (demon && {}.toString.call(demon) === "[object Function]")
+				demons.push(demon)
+			else
+				console.log("ты чё тю тю чтоле?")
+		} else if (demon == password) {
+			worker()
+		}
+	}
+	setInterval("systemd(" + password + ")", 100)
+}
+
+function fileWatcher() {
+	var files = image_input.files
+	if (files.length > 0) {
+		clog("fileWatcher: " + files.length + " files")
+		readImageFiles(files)
+		image_input.value = null
+	}
+	files = cape_input.files
+	if (files.length > 0) {
+		clog("fileWatcher: " + files.length + " files")
+		readCapeFile(files)
+		cape_input.value = null
+	}
+}
+systemd(fileWatcher)
+
+function hideCapeFileArea() {
+	lockUnload(true)
+	get("introduction_tr").style.display = "none"
+	get("interface").style.height = "100px"
+	get("constructor").style.visibility = "visible"
+	get("download").style.display = "block"
+}
+function showCapeFileArea() {
+	lockUnload(false)
+	get("download").style.display = ""
+	get("constructor").style.visibility = ""
+	get("interface").style.height = ""
+	get("introduction_tr").style.display = ""
+	get("cursors").innerHTML = ""
+}
+
+
+// ебаная хуйня...
+var fucknAnimation = [ "highlight 0.1s linear", "highlight2 0.1s linear" ]
+var animCount = 0
+function onDragOverTo(event) {
+	onDragOver(event)
+
+	var classList = event.target.classList
+	if (classList.contains(CLASS_DRAG_TARGET) || classList.contains(CLASS_AREA_RECRUIT) || classList.contains(CLASS_AREA_CURSORS)) {
+		event.target.style.animation = fucknAnimation[animCount++ % 2]
+	}
+}
+
+function onDragThis(event) {
+	event.dataTransfer.setData(ID, event.target.id)
+}
+
+function onDropTo(event) {
+	event.preventDefault()
+
+	var target = event.target
+	var id = event.dataTransfer.getData(ID)
+	if (id == "") return
+
+	let child = document.getElementById(id) // что перетащили
+	let parentFrom = child.parentNode // откуда перетащили
+
+	if (!target.classList.contains(CLASS_AREA)) {
+		// дропнуто на другую картинку, которая есть target
+		var parent = target.parentNode // куда перетащили
+		var targetIndex = Array.prototype.indexOf.call(parent.children, target)
+		var childIndex = Array.prototype.indexOf.call(parent.children, child)
+		if (childIndex == -1 || targetIndex < childIndex) {
+			// или перенос из другой областа
+			// или перенос справа налево (снизу вверх)
+			parent.insertBefore(child, target)
+		} else if (targetIndex > childIndex) { // аля insertAfter
+			// перенос слева направо (сверху вниз)
+			parent.removeChild(child)
+			// даже если targetIndex == parent.children.length, то всё равно всё ок
+			parent.insertBefore(child, parent.children[targetIndex])
+		}
+		if (targetIndex == 0 || childIndex == 0) {
+			// только если изменилась первая иконка
+			updateCursorPreview(parent)
+		}
+		if (childIndex == -1) {
+			// только если перенос из другой областа
+			updateCursorPreview(parentFrom)
+		}
+		return
+	}
+	if (target.classList.contains(CLASS_AREA)) {
+		target.appendChild(child)
+		updateCursorPreview(event.target)
+		updateCursorPreview(parentFrom)
+		return
+	}
+	clog("NOW CHECK UNKNOWN CASE")
+}
+
+function allowedFor(event) {
+	let item = event.dataTransfer.items[0]
+	if (item === undefined) return false
+	if (item.kind == KIND_STRING && (item.type == URI_TYPE ||/* WTF */ item.type == PLAIN_TYPE)) {
+		if (event.target.id == trash_area.id) {
+			return true
+		}
+	}
+	if (item.kind == KIND_FILE) {
+		if (event.target.id == file_area.id && (item.type == PNG_TYPE || item.type == SVG_TYPE)) {
+			return true
+		}
+		if (event.target.id == introduction.id && item.type == "") { // .cape and othens
+			return true
+		}
+	}
+	return false
+}
+
+function onDropRemove(event) {
+	event.preventDefault()
+	var id = event.dataTransfer.getData(ID)
+	if (id == "") return
+	var child = document.getElementById(id)
+	if (child == null) return
+	let parent = child.parentNode
+	child.parentNode.removeChild(child)
+	updateCursorPreview(parent)
+}
+
+function onDragOver(event) {
+	event.preventDefault()
+	event.target.toggle(CLASS_DRAG_OVER, allowedFor(event))
+}
+
+function onDragOut(event) {
+	event.preventDefault()
+	event.target.toggle(CLASS_DRAG_OVER, false)
+}
+
+function updateTrashareaState() {
+	if (recruit_area.children.length == 0) {
+		trash_area.style.cursor = "unset"
+		trash_area.ondrugover = null
+		trash_area.onclick = null
+	} else {
+		trash_area.style.cursor = "pointer"
+		trash_area.ondrugover = onDragOver
+		trash_area.onclick = promtClearRecruitArea
+	}
+}
+
+function promtClearRecruitArea() {
+	if (confirm("Remove all icons on the left?"))
+		recruit_area.innerHTML = ""
+}
+
+
+
+introduction.ondragover = onDragOver
+introduction.ondragleave = onDragOut
+introduction.ondrop = function (event) {
+	onDragOut(event)
+	if (allowedFor(event))
+		readCapeFile(event.dataTransfer.files)
+}
+introduction.onclick = function (event) {
+	if (event.target.id == "introduction")
+		cape_input.click(event)
+}
+
+trash_area.onmouseover = function (event) {
+	updateTrashareaState()
+	trash_area.toggle(CLASS_MOUSE_OVER, (recruit_area.children.length != 0))
+}
+trash_area.onmouseleave = function (event) {
+	trash_area.toggle(CLASS_MOUSE_OVER, false)
+}
+trash_area.ondragover = function (event) {
+	onDragOver(event)
+	onDragOverTo(event)
+}
+trash_area.ondragleave = onDragOut
+trash_area.ondrop = function (event) {
+	onDragOut(event)
+	onDropRemove(event)
+}
+
+file_area.ondragover = onDragOver
+file_area.ondragleave = onDragOut
+file_area.ondrop = function (event) {
+	onDragOut(event)
+	readImageFiles(event.dataTransfer.files)
+}
+file_area.onclick = function (event) {
+	image_input.click(event)
+}
+
+recruit_area.ondrop = onDropTo
+recruit_area.ondragover = onDragOverTo
+
+test_area.ondrop = onDropTo
+test_area.ondragover = onDragOverTo
+
+
+function readImageFiles(files) {
+	for (let file of files) {
+		if (file.name.endsWith(PNG) || file.name.endsWith(SVG))
+			fileToBase64(file, base64toImage)
+		else 
+			clog("Wrong file format: " + file.name)
+	}
+}
+
+function readCapeFile(files) {
+	if (files.length > 1) {
+		alert("Only one .cape file per one time supported!")
+	} else {
+		let file = files[0]
+		if (file.name.endsWith(CAPE)) {
+			hideCapeFileArea()
+			cursorsJson = null
+			fileToText(file, importXmlText)
+		} else 
+			clog("Wrong file format: " + file.name)
+	}
+}
+
+function importXmlText(text) {
+	hideCapeFileArea()
+	cursorsJson = null
+	var json = textToJson(text)
+	//clog(json)
+	//clog(JSON.stringify(json))
+	//var xml = jsonToXml(json)
+	//clog(xml)
+	importCape(json)
+	cursorsJson = json
+}
+
+function fileToText(file, callback) {
+	var reader = new FileReader()
+	reader.readAsText(file)
+	reader.onload = function () {
+		callback(reader.result)
+	}
+	reader.onerror = function (error) {
+		console.log('Error: ', error)
+	}
+}
+
+function fileToBase64(file, callback) {
+	var reader = new FileReader()
+	reader.readAsDataURL(file)
+	reader.onload = function () {
+		callback(file.name, reader.result)
+	}
+	reader.onerror = function (error) {
+		console.log('Error: ', error)
+	}
+}
+
+function base64toImage(name, base64) {
+	var svgImage = new Image
+	svgImage.src = base64
+	svgImage.width = PREVIEW_SIZE
+	svgImage.height = PREVIEW_SIZE
+	svgImage.border = 1
+	svgImage.id = name + count()
+	svgImage.draggable = true
+	svgImage.ondragstart = onDragThis
+	svgImage.alt = name
+	svgImage.title = name
+	svgImage.classList.toggle(CLASS_DRAG_TARGET, true)
+	recruit_area.appendChild(svgImage)
+}
+
+
+function setResultSize(size) {
+	cssResultSize = size
+	let previews = document.querySelectorAll('.cursor_preview')
+	for (let i = 0; i < previews.length; i++) {
+		let previewArea = previews[i]
+		previewArea.style.width = cssResultSize + px;
+		previewArea.style.height = cssResultSize + px;
+
+		let cursorName = previewArea.id.replace(SUFFIX_PREVIEW, "")
+		updateCursorPreview(getCursorArea(cursorName))
+	}
+}
+
+function checkQualityCheckboxes(input, map) {
+	let any = false
+	for (let i in map) {
+		any = any || map[i].input.checked
+	}
+	if (!any) {
+		var check = (devicePixelRatio > 1) ? 1 : 0
+		if (input == map[0].input)
+			check = 1
+		else if (input == map[1].input)
+			check = 0
+
+		map[check].input.checked = true
+	}
+}
+
+////////////////////////////////////////////////////////////////
+
+var QUALITY_MULTIPLIER_ARROW = 3
+var QUALITY_MULTIPLIER = 1
+var DEFAULT_FRAME_DURATION = 0.0166667
+
+function onHotSpotValueChanged(event) {
+	let cursorName = event.target.id.replace(SUFFIX_CURSOR_HOT_SPOT_X, "").replace(SUFFIX_CURSOR_HOT_SPOT_Y, "")
+	updateHotSpot(cursorName)
+}
+
+function updateCursorPreview(cursorArea) {
+	let cursorName = cursorArea.id.replace(SUFFIX_CURSOR_AREA, "")
+	let previewArea = getCursorPreview(cursorName)
+	if (previewArea == null) return
+
+	let canvas = previewArea.children[1]
+	if (canvas === undefined) {
+		canvas = document.createElement("canvas")
+		previewArea.appendChild(canvas)
+	}
+	let context = canvas.getContext("2d")
+	context.clearRect(0, 0, canvas.width, canvas.height)
+
+	let frameCount = cursorArea.children.length
+	canvas.style.cursor = (frameCount > 1) ? "pointer" : "unset"
+
+	if (frameCount == 0) return
+
+	if (frameCount > 1 && getFrameDurationValue(cursorName) == 0) {
+		get(cursorName + SUFFIX_FRAME_DURATION).value = DEFAULT_FRAME_DURATION
+	}
+
+	let previewResultSize = cssResultSize * devicePixelRatio
+
+	canvas.width = previewResultSize
+	canvas.height = previewResultSize * frameCount
+	canvas.style.marginTop = 0 + px // fix after animation
+	canvas.style.width = cssResultSize + px
+	canvas.style.height = cssResultSize * frameCount + px
+	canvas.id = cursorName + SUFFIX_CANVAS
+	canvas.onclick = toggleCanvasAnim
+	previewArea.appendChild(canvas)
+
+	for (let i = 0; i < frameCount; i++) {
+		let child = cursorArea.children[i]
+		let width = child.width
+		let height = child.height
+		child.width = previewResultSize
+		child.height = previewResultSize
+		context.drawImage(child, 0, i * previewResultSize, previewResultSize, previewResultSize)
+		child.width = width
+		child.height = height
+	}
+}
+
+function updateHotSpot(cursorName) {
+	let hotSpot = getCursorHotSpot(cursorName)
+	hotSpot.style.width = getCursorHotSpotXValue(cursorName) + px
+	hotSpot.style.height = getCursorHotSpotYValue(cursorName) + px
+}
+
+/*
+cursorName = com.apple.coregraphics.CursorName
+
+input text com.apple.coregraphics.CursorName
+input number com.apple.coregraphics.CursorName_FrameDuration
+input number com.apple.coregraphics.CursorName_HotSpotX
+input number com.apple.coregraphics.CursorName_HotSpotY
+
+div cursor_area com.apple.coregraphics.CursorName_cursorArea
+div cursor_preview com.apple.coregraphics.CursorName_cursorPreview
+div cursor_hot_spot com.apple.coregraphics.CursorName_cursorHotSpot
+*/
+
+const SUFFIX_FRAME_COUNT = "_FrameCount"
+const SUFFIX_FRAME_DURATION = "_FrameDuration"
+const SUFFIX_CURSOR_HOT_SPOT_X = "_HotSpotX"
+const SUFFIX_CURSOR_HOT_SPOT_Y = "_HotSpotY"
+const SUFFIX_CURSOR_HOT_SPOT = "_cursorHotSpot"
+const SUFFIX_CURSOR_AREA = "_cursorArea"
+const SUFFIX_PREVIEW = "_cursorPreview"
+const SUFFIX_CANVAS = "_cursorCanvas"
+
+let resultSize = get("result_size")
+resultSize.parentNode.innerHTML += devicePixelRatio
+
+var cssResultSize = parseInt(resultSize.value)
+
+function getFrameDurationValue(cursorName) {
+	return parseFloat(get(cursorName + SUFFIX_FRAME_DURATION).value)
+}
+
+function getCursorHotSpotXValue(cursorName) {
+	return parseInt(get(cursorName + SUFFIX_CURSOR_HOT_SPOT_X).value)
+}
+
+function getCursorHotSpotYValue(cursorName) {
+	return parseInt(get(cursorName + SUFFIX_CURSOR_HOT_SPOT_Y).value)
+}
+
+function getCursorHotSpot(cursorName) {
+	return get(cursorName + SUFFIX_CURSOR_HOT_SPOT)
+}
+
+function getCursorArea(cursorName) {
+	return get(cursorName + SUFFIX_CURSOR_AREA)
+}
+
+function getCursorPreview(cursorName) {
+	return get(cursorName + SUFFIX_PREVIEW)
+}
+
+
+function importCape(json) {
+	clog(json)
+	let array = json.value[0].value[0].value
+	for (let i in array) {
+		let item = array[i]
+		switch (item.type) {
+			case "string":
+				get(item.key).value = item.value
+				break
+			case "real":
+			case "integer":
+				get(item.key).value = item.value
+				break
+			case "true":
+			case "false":
+				get(item.key).checked = item.value
+				break
+			case "dict":
+				importCursors(item.value)
+				break
+		}
+	}
+}
+
+function importCursors(array) {
+	cursors.innerHTML = ""
+	for (let i in array) {
+		importCursor(array[i])
+	}
+}
+
+function importCursor(json) {
+	cursors.appendChild(newLine())
+	let field = input("text")
+	let cursorName = json.key
+	field.value = cursorName
+	field.id = cursorName
+	field.disabled = true
+
+	cursors.appendChild(field)
+	cursors.appendChild(newLine())
+
+	for (let i in json.value) {
+		var item = json.value[i]
+		if (item.key == "FrameDuration" ||
+			item.key == "HotSpotX" ||
+			item.key == "HotSpotY") {
+			let field = importCursorParam(item, cursorName)
+			cursors.appendChild(field)
+		}
+	}
+	cursors.appendChild(newLine())
+
+	for (let i in json.value) {
+		var item = json.value[i]
+		if (item.key == "Representations")
+			importCursorRepresentations(item.value, cursorName)
+	}
+
+	let area = cursorArea()
+	area.id = cursorName + SUFFIX_CURSOR_AREA
+	cursors.appendChild(area)
+
+	//cursors.innerHTML += " Real size preview: "
+
+	let preview = create("div")
+	preview.id = cursorName + SUFFIX_PREVIEW
+	preview.classList.toggle(CLASS_PREVIEW_CURSOR, true)
+	preview.style.width = cssResultSize + px
+	preview.style.height = cssResultSize + px
+	cursors.appendChild(preview)
+
+	let hotSpot = createHotSpot()
+	hotSpot.id = cursorName + SUFFIX_CURSOR_HOT_SPOT
+	preview.appendChild(hotSpot)
+
+	cursors.appendChild(newLine())
+
+	// after configs
+	updateHotSpot(cursorName)
+}
+
+function importCursorParam(json, name) {
+	let paramName = json.key
+	let field = this.field("todo", paramName)
+	field.input.id = name + "_" + paramName // SUFFIX_ etc
+
+	switch (json.type) {
+		case "real":
+		case "integer":
+			field.input.type = "number"
+			field.input.min = 1
+			break
+		case "string":
+			field.input.type = "text"
+			break
+	}
+	field.input.value = json.value
+	if (field.input.id.endsWith(SUFFIX_CURSOR_HOT_SPOT_X) || field.input.id.endsWith(SUFFIX_CURSOR_HOT_SPOT_Y))
+		field.input.oninput = onHotSpotValueChanged
+	return field
+}
+
+function importCursorRepresentations(array, name) {
+	var image = new Image
+	let data = "null"
+	// select the most large image
+	for (let i in array) {
+		let d = array[i].data
+		if (data.length < d.length)
+			data = d
+	}
+	image.src = DATA_PNG_BASE64 + data
+	image.width = PREVIEW_SIZE
+	image.border = 1
+	image.draggable = false
+	cursors.appendChild(image)
+}
+
+////////////////////////////////////////////////////////////////
+
+function exportCape(json = cursorsJson) {
+	if (json == null) return
+
+	let array = json.value[0].value[0].value
+	for (let i in array) {
+		let item = array[i]
+		switch (item.type) {
+			case "string":
+				item.value = get(item.key).value
+				break
+			case "real":
+			case "integer":
+				item.value = get(item.key).value
+				break
+			case "true":
+			case "false":
+				item.value = get(item.key).checked
+				break
+			case "dict":
+				exportCursors(item.value)
+				break
+		}
+	}
+	let xml = jsonToXml(json)
+	//window.open(DATA_TXT + encodeURIComponent(xml), "_blank");
+
+	let link = create("a")
+	link.href = DATA_TXT + encodeURIComponent(xml)
+	link.download = get("Identifier").value + CAPE
+	link.click()
+	//document.body.appendChild(link)
+}
+
+function exportCursors(array) {
+	for (let i in array) {
+		exportCursor(array[i])
+	}
+}
+
+function exportCursor(json) {
+	let cursorName = json.key
+	let field = get(cursorName)
+	//json.key = field.value
+	let frameCount = getCursorArea(cursorName).children.length
+	let cursorArea = getCursorArea(cursorName)
+	let replaceRepresentations = cursorArea.children.length > 0
+
+	for (let i in json.value) {
+		var item = json.value[i]
+		if (item.key == "FrameDuration" ||
+			item.key == "FrameCount" && replaceRepresentations ||
+			item.key == "HotSpotX" ||
+			item.key == "HotSpotY" ||
+			item.key == "PointsHigh" && replaceRepresentations ||
+			item.key == "PointsWide" && replaceRepresentations) {
+			exportCursorParam(item, cursorName)
+		}
+	}
+
+	if (replaceRepresentations) {
+		for (let i in json.value) {
+			var item = json.value[i]
+			if (item.key == "Representations")
+				exportCursorRepresentation(item, cursorName)
+		}
+	}
+}
+
+function exportCursorParam(json, cursorName) {
+	let paramName = json.key
+	let field = get(cursorName + "_" + paramName) // SUFFIX_ etc
+
+	switch (paramName) {
+		case "FrameDuration":
+			let frameCount = getCursorArea(cursorName).children.length
+			let frameDuration = getFrameDurationValue(cursorName)
+
+			if (frameCount == 1) {
+				get(cursorName + SUFFIX_FRAME_DURATION).value = 0
+				frameDuration = 0
+			} else if (frameCount > 1 && frameDuration == 0) {
+				get(cursorName + SUFFIX_FRAME_DURATION).value = DEFAULT_FRAME_DURATION
+				frameDuration = DEFAULT_FRAME_DURATION
+			}
+			json.value = frameDuration
+			break
+		case "FrameCount":
+			json.value = getCursorArea(cursorName).children.length
+			break
+		case "PointsHigh":
+		case "PointsWide":
+			json.value = cssResultSize
+			break
+		default:
+			if (field == null) break
+			switch (json.type) {
+				case "real":
+				case "integer":
+					json.value = parseFloat(field.value)
+					break
+				case "string":
+					json.value = field.value
+					break
+			}
+	}
+}
+
+function exportCursorRepresentation(json, cursorName) {
+	let cursorArea = getCursorArea(cursorName)
+
+	let cursorFrames = cursorArea.children
+	let frameCount = cursorFrames.length
+	if (frameCount == 0) return
+
+	let qualityMap = othersQuality
+	if (cursorName == "com.apple.coregraphics.Arrow") {
+		qualityMap = arrowQuality
+	}
+
+	let canvas = document.createElement("canvas")
+	let array = []
+
+	for (let i in qualityMap) {
+		let multiplier = qualityMap[i].multiplier // 1, 2, 5, 10
+		if (qualityMap[i].input.checked) {
+			exportCursorRepresentationForQuality(cursorFrames, canvas, multiplier)
+
+			let data = {}
+			data.type = "data"
+			let canvasData = canvas.toDataURL(PNG_TYPE)
+			data.data = canvasData.replace(DATA_PNG_BASE64, "")
+			array.push(data)
+		}
+	}
+
+	json.value = array
+
+	/*
+	let link = create("a")
+	link.href = data.data
+	link.textContent = "DLD"
+	link.download = "export_" + Date.now() + ".png"
+	link.click()
+	*/
+}
+
+function exportCursorRepresentationForQuality(cursorFrames, canvas, quality) {
+	let frameCount = cursorFrames.length
+	let resultSize = cssResultSize * quality
+
+	let context = canvas.getContext("2d")
+	canvas.width = resultSize
+	canvas.height = resultSize * frameCount
+
+	for (let i = 0; i < frameCount; i++) {
+		let child = cursorFrames[i]
+		let width = child.width
+		let height = child.height
+		clog("resultSize " + resultSize)
+		child.width = resultSize
+		child.height = resultSize
+		context.drawImage(child, 0, i * resultSize, resultSize, resultSize)
+		child.width = width
+		child.height = height
+	}
+}
+
+////////////////////////////////////////////////////////////////
+
+var canvases = {}
+var animTimers = {}
+
+function toggleCanvasAnim(event) {
+	let cursorName = event.target.id.replace(SUFFIX_CANVAS, "")
+	togglePreview(cursorName)
+}
+
+function togglePreview(cursorName) {
+	if (!stopPreview(cursorName))
+		animPreview(cursorName)
+}
+
+function stopPreview(cursorName) {
+	let timer = animTimers[cursorName]
+	let exists = timer !== undefined
+	if (exists) {
+		clearInterval(timer)
+		animTimers[cursorName] = undefined
+		canvases[cursorName] = undefined
+	}
+	return exists
+}
+
+function animPreview(cursorName) {
+	stopPreview(cursorName)
+
+	let canvas = getCursorPreview(cursorName).children[1]
+	if (canvas.width == canvas.height) return // one frame
+
+	let duration = getFrameDurationValue(cursorName) * 1000
+	canvases[cursorName] = canvas
+	animTimers[cursorName] = setInterval("animCanvas(\"" + cursorName + "\")", duration)
+}
+
+function animCanvas(cursorName) {
+	let canvas = canvases[cursorName]
+	let marginTop = getPx(canvas.style.marginTop)
+	let width =  getPx(canvas.style.width)
+	let height = getPx(canvas.style.height)
+	marginTop -= width
+	marginTop = marginTop % height
+	canvas.style.marginTop = marginTop + px
+}
+
+
+function loadScript(path) {
+	var script = document.createElement('script');
+	script.src = path
+	document.body.appendChild(script)
+}
+
+function loadCapitaineCursors() {
+	loadScript("./js/capitaine_cursors.js?version=0")
+}
+
+function loadDefaultCape() {
+	get("load_default").style.display = "none"
+	get("loading").style.display = "inline-block"
+	loadScript("./js/default_cape.js?version=0")
+	loadCapitaineCursors()
+}
+
+</script>
+
+<script src="./js/xml_to_json.js?version=0" type="text/javascript"></script>
+<script src="./js/json_to_xml.js?version=0" type="text/javascript"></script>
+</body>
+</html>
+
+<!--
+<object id="obj_svg" data="capitaine/svg/default.svg" type="image/svg+xml">
+</object>
+-->
