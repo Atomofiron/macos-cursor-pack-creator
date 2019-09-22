@@ -1,0 +1,1 @@
+# macos-cursor-pack-creator
